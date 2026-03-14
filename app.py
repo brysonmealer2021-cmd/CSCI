@@ -147,17 +147,19 @@ else:
             st.divider()
             st.subheader("Vitals & Intake")
             st.caption("“A heart at peace gives life to the body.”")
-            v1, v2, v3 = st.columns(3)
+            v1, v2, v3, v4 = st.columns(4)
             with v1: sugar = st.number_input("Blood Sugar", 0, 500, 100)
             with v2: food = st.slider("Food Intake %", 0, 100, 100)
             with v3: fluids = st.number_input("Oral Fluids (oz)", 0, 120, 8)
+            with v4: blood pressure = st.text_input("Blood Pressure", placeholder="120/80")
             
             st.caption("“Keep thy heart with all diligence...”")
             final_notes = st.text_area("Shift Observations")
 
             if st.form_submit_button("Secure Full Ledger Entry"):
                 supabase.table("care_logs").insert({
-                    "steward": username, "shift": active_shift, "blood_sugar": sugar,
+                    "steward": username, "shift": active_shift, "blood_pressure":
+                    blood_pressure, "blood_sugar": sugar,
                     "meds_given": ", ".join(selected_scheduled + selected_prns), "notes": final_notes
                 }).execute()
                 st.success(random.choice(report_blessings))
