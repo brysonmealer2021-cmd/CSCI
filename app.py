@@ -158,7 +158,7 @@ else:
 
             if st.form_submit_button("Secure Full Ledger Entry"):
                 supabase.table("care_logs").insert({
-                    "steward": username, "shift": active_shift, "blood_pressure": blood_pressure, "blood_sugar": sugar,
+                    "steward": username, "shift": active_shift, "Blood_Pressure": Blood_Pressure, "blood_sugar": sugar,
                     "meds_given": ", ".join(selected_scheduled + selected_prns), "notes": final_notes
                 }).execute()
                 st.success(random.choice(report_blessings))
