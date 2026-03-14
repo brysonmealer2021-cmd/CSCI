@@ -34,6 +34,3 @@ if not st.session_state.logged_in:
         user_query = supabase.table("users").select("*").eq("username", name_input).eq("pin", pin_input).execute()
 
         if len(user_query.data) > 0:
-                                                                           [ Read 237 lines ]
-^G Help         ^O Write Out    ^W Where Is     ^K Cut          ^T Execute      ^C Location     M-U Undo        M-A Set Mark    M-] To Bracket  M-Q Previous
-^X Exit         ^R Read File    ^\ Replace      ^U Paste        ^J Justify      ^/ Go To Line   M-E Redo        M-6 Copy        ^Q Where Was    M-W Next
