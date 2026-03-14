@@ -151,7 +151,7 @@ else:
             with v1: sugar = st.number_input("Blood Sugar", 0, 500, 100)
             with v2: food = st.slider("Food Intake %", 0, 100, 100)
             with v3: fluids = st.number_input("Oral Fluids (oz)", 0, 120, 8)
-            with v4: blood pressure = st.text_input("Blood Pressure", placeholder="120/80")
+            with v4: Blood_Pressure = st.text_input("Blood Pressure", placeholder="120/80")
             
             st.caption("“Keep thy heart with all diligence...”")
             final_notes = st.text_area("Shift Observations")
