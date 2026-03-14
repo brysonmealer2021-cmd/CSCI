@@ -108,7 +108,7 @@ else:
                 cath_ml = st.number_input("Catheter Amount (mL)", 0, 2000, 0, step=50)
                 t_obs = st.text_input("Observations")
                 if st.form_submit_button("Log Round"):
-                    supabase.table("care_logs").insert({"steward": "username", "entry_type": "toileting_round", "toileting": f"{t_time}: {t_status} | Cath: {cath_ml}mL", "notes": t_obs}).execute()
+                    supabase.table("care_logs").insert({"steward": "steward", "entry_type": "toileting_round", "toileting": f"{t_time}: {t_status} | Cath: {cath_ml}mL", "notes": t_obs}).execute()
                     st.toast("Round secured.")
 
         # II. FULL SHIFT REPORT
