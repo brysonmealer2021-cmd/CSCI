@@ -1,4 +1,3 @@
-  GNU nano 7.2                                                                     app.py                                                                               
 import streamlit as st
 import pandas as pd
 from supabase import create_client
