@@ -3,6 +3,11 @@ import pandas as pd
 from supabase import create_client
 import random
 from datetime import datetime, timedelta
+from datetime import datetime
+import zoneinfo
+
+# Anchoring the hour to the Eastern timezone
+current_hour = datetime.now(zoneinfo.ZoneInfo("America/New_York")).hour
 
 # 1. THE TOOLS (DATABASE CONNECTION)
 url = st.secrets["SUPABASE_URL"]
