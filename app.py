@@ -237,4 +237,5 @@ else:
     st.divider()
     st.header("📜 Vigil History")
     try:
-        recent = supabase.table("care_logs").select("*").order("created_at", desc=True).limit(25).execute()
+        recent = supabase.table("care_logs").select("*").order("created_at", desc=True).limit(25).execute() 
+        except
