@@ -9,10 +9,9 @@ url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_KEY"]
 supabase = create_client(url, key)
 
-# 2. THE CUSTOM THEME (Teal Buttons & Deep Blue Titles)
+# 2. THE CUSTOM THEME
 st.markdown("""
     <style>
-    /* Vibrant Teal for Buttons */
     div.stButton > button {
         background-color: #008080 !important;
         color: white !important;
@@ -26,20 +25,25 @@ st.markdown("""
         background-color: #20b2aa !important;
         color: white !important;
     }
-    /* Deep Ocean Blue for Headers (High Contrast/Readable) */
     h1, h2, h3 {
         color: #1a5276 !important;
         font-weight: bold;
     }
-    /* Expander Styling */
     .stExpander {
         border: 1px solid #008080 !important;
         border-radius: 8px;
     }
+    /* Style for the Draft Review Box */
+    .draft-box {
+        padding: 15px;
+        border-radius: 10px;
+        background-color: #f0f8ff;
+        border: 2px dashed #1a5276;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. SESSION STATE
+# 3. SESSION STATE (The Watch Memory)
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 if 'steward_name' not in st.session_state:
@@ -49,38 +53,45 @@ if 'steward_role' not in st.session_state:
 if 'blessing_received' not in st.session_state:
     st.session_state.blessing_received = False
 
+# The Vigil Buffer
+if 'shift_data' not in st.session_state:
+    st.session_state.shift_data = {
+        "bp": "", "hr": "", "spo2": "", "glucose": "",
+        "nutrition": [], "hydration": 0, "meds": [], "notes": ""
+    }
+
 # 4. THE PRAYER RINGS
 blessings_map = {
     "gay": [
-        "O Lord Almighty, the Healer of our souls and bodies, who put down and raise up, visit Thy servant in her physical trial. Grant her patience and restore her to health.",
-        "O Christ, who alone art our Defender, visit and heal Thy suffering servant. Deliver her from sickness and bitter pain.",
-        "Holy Father, Physician of our souls and bodies, send down Thy healing power. Comfort her in her weakness."
+        "O Lord Almighty, the Healer of our souls and bodies, visit Thy servant in her physical trial. Grant her patience and restore her to health.",
+        "O Christ, our Defender, visit and heal Thy suffering servant. Deliver her from sickness and bitter pain.",
+        "Holy Father, Physician of our souls and bodies, send down Thy healing power."
     ],
     "katelyn": [
-        "O Lord, bless the heavy and holy labor of motherhood. Grant her the physical strength to run the race and the spiritual patience.",
-        "Establish the work of her hands, O Lord. Give her endurance in her body and stillness in her heart as she tends to her family.",
-        "Most Holy Theotokos, guide this mother's daily labor. Multiply her strength and surround her house with grace."
+        "O Lord, bless the heavy and holy labor of motherhood. Grant her physical strength and spiritual patience.",
+        "Establish the work of her hands, O Lord. Give her endurance in her body as she tends to her family.",
+        "Most Holy Theotokos, guide this mother's daily labor. Multiply her strength."
     ],
     "malinda": [
-        "O Lord, who bore the heavy cross, grant strength to the one who carries the weight for her family. Give her broad shoulders and a quiet mind.",
-        "Lord, bless the one who leads and organizes the care of her father. Grant her wisdom, unending patience, and rest from her heavy burdens.",
-        "O Master, look upon the one who bears the yoke of leadership in this house. Grant her rest and steady hands."
+        "O Lord, who bore the heavy cross, grant strength to the one who carries the weight for her family.",
+        "Lord, bless the one who leads and organizes the care of her father. Grant her wisdom and rest.",
+        "O Master, look upon the one who bears the yoke of leadership. Grant her steady hands."
     ],
     "mandy": [
-        "Let not your heart be troubled, neither let it be afraid. O Lord, speak peace to her anxious thoughts and still the storms within.",
-        "O Christ, who calmed the raging sea, quiet the restless waters of her mind. Grant her a deep and abiding stillness today.",
-        "Most Holy Theotokos, calm the anxious spirit of Thy servant. Bring her the gentle quiet of the Skete."
+        "Let not your heart be troubled, neither let it be afraid. O Lord, speak peace to her anxious thoughts.",
+        "O Christ, who calmed the raging sea, quiet the restless waters of her mind.",
+        "Most Holy Theotokos, calm the anxious spirit of Thy servant."
     ],
     "bryce": [
         "O Lord and Master of my life, grant the spirit of chastity, humility, patience, and love to Thy servant.",
         "Illumine our darkness, O Lord, and grant us a peaceful and undisturbed watch.",
-        "Lord Jesus Christ, Son of God, have mercy on me, a sinner. Grant me a quiet spirit to tend the elder today."
+        "Lord Jesus Christ, Son of God, have mercy on me, a sinner."
     ]
 }
 
 def get_blessing(username):
     name_key = username.strip().lower()
-    return random.choice(blessings_map.get(name_key, ["Peace be to this house, and to all who dwell herein."]))
+    return random.choice(blessings_map.get(name_key, ["Peace be to this house."]))
 
 # 5. THE THRESHOLD (LOGIN)
 if not st.session_state.logged_in:
@@ -98,7 +109,7 @@ if not st.session_state.logged_in:
                 st.session_state.daily_blessing = get_blessing(st.session_state.steward_name)
                 st.rerun()
             else:
-                st.error("The gate remains closed. Verify your name and PIN.")
+                st.error("The gate remains closed. Verify credentials.")
         except Exception as e:
             st.error(f"Connection failure: {e}")
 
@@ -107,197 +118,161 @@ elif not st.session_state.blessing_received:
     with st.container(border=True):
         st.subheader("☦️ A Blessing for the Watch")
         st.write(f"*{st.session_state.daily_blessing}*")
-        st.divider()
         if st.button("Amen", type="primary", use_container_width=True):
             st.session_state.blessing_received = True
             st.rerun()
 
 # 7. THE MAIN LABOR
 else:
-    # --- DYNAMIC TITLES ---
     current_hour = datetime.now().hour
-    if 6 <= current_hour < 12: dynamic_title, wt, wq = "🌅 The Morning Offering", "🌅 Morning Light", "“Grant me to greet the day in peace.”"
-    elif 12 <= current_hour < 18: dynamic_title, wt, wq = "☀️ The Midday Labor", "☀️ Midday Labor", "“Establish the work of our hands.”"
-    elif 18 <= current_hour < 21: dynamic_title, wt, wq = "🕯️ The Evening Sacrifice", "🕯️ Evening Watch", "“Let my prayer arise as incense.”"
-    else: dynamic_title, wt, wq = "🌌 The Night Vigil", "🌌 Night Vigil", "“Behold, the Bridegroom comes at midnight.”"
+    if 6 <= current_hour < 12: d_title, wt, wq = "🌅 Morning Offering", "🌅 Morning Light", "“Greet the day in peace.”"
+    elif 12 <= current_hour < 18: d_title, wt, wq = "☀️ Midday Labor", "☀️ Midday Labor", "“Establish the work of our hands.”"
+    elif 18 <= current_hour < 21: d_title, wt, wq = "🕯️ Evening Sacrifice", "🕯️ Evening Watch", "“Let my prayer arise as incense.”"
+    else: d_title, wt, wq = "🌌 Night Vigil", "🌌 Night Vigil", "“Behold, the Bridegroom comes.”"
 
-    # --- SIDEBAR PRAYERS ---
     st.sidebar.write(f"**Steward:** {st.session_state.steward_name}")
-    st.sidebar.divider()
-    st.sidebar.subheader("☦️ The Jesus Prayer")
-    st.sidebar.caption("*Lord Jesus Christ, Son of God, have mercy on me, a sinner.*")
-    st.sidebar.divider()
-    st.sidebar.subheader("☦️ The Trisagion")
-    st.sidebar.caption("*Holy God, Holy Mighty, Holy Immortal, have mercy on us.*")
     if st.sidebar.button("Lock the Cell"):
         st.session_state.logged_in = False
         st.rerun()
 
-    st.title(f"☦️ {dynamic_title}")
+    st.title(f"☦️ {d_title}")
     
-    # --- ROTATING ST EPHREM AT TOP ---
-    ephrem_verses = [
+    # Rotating St. Ephrem
+    st.info(random.choice([
         "“O Lord and Master of my life, take from me the spirit of sloth, despair, lust of power, and idle talk.”",
         "“But give rather the spirit of chastity, humility, patience, and love to Thy servant.”",
         "“Yea, O Lord and King, grant me to see my own transgressions, and not to judge my brother.”"
-    ]
-    st.info(random.choice(ephrem_verses))
+    ]))
 
-    # --- DAUGHTER VS STEWARD ---
     if st.session_state.steward_role.strip().lower() == "daughter":
-        st.success("The watch is steady and your father is in good hands. The daily labor here is focused entirely on his comfort and honor. You carry no burden of the work today. The complete ledger is laid open below.")
+        st.success("The watch is steady. Consolidated shift records are available below.")
     else:
         shift = st.radio("Active Vigil:", ["Day", "Night", "Overnight"], horizontal=True)
 
-        # --- NUTRITION & HYDRATION ---
-        with st.expander("🍲 Nutrition & Hydration", expanded=True):
-            forty_eight_ago = (datetime.now() - timedelta(hours=48)).isoformat()
-            try:
-                logs = supabase.table("care_logs").select("meal_info").gt("created_at", forty_eight_ago).execute()
-                data_list = logs.data if logs.data else []
-            except:
-                data_list = []
-            
-            total_oz = sum(int(e['meal_info'].split('(')[1].split('oz')[0]) for e in data_list if e.get('meal_info') and "Drink:" in e['meal_info'])
-            food_p_list = [int(e['meal_info'].split('(')[1].split('%')[0]) for e in data_list if e.get('meal_info') and "Food:" in e['meal_info']]
-            avg_food = int(sum(food_p_list)/len(food_p_list)) if food_p_list else 0
-
-            col_nut, col_hyd = st.columns(2)
-            with col_nut:
-                st.markdown(f"### 🍞 Nutrition ({avg_food}% avg)")
-                food_item = st.text_input("Food Item:", key="f_input_final")
-                food_pct = st.slider("% Consumed", 0, 100, 0, 10)
-                if st.button("Seal Nutrition"):
-                    supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"meal_info":f"Food: {food_item} ({food_pct}%)"}).execute()
-                    st.rerun()
-
-            with col_hyd:
-                st.markdown(f"### 💧 Hydration ({total_oz}oz total)")
-                drink_item = st.text_input("Drink Item:", key="d_input_final")
-                drink_oz = st.number_input("Amount (oz)", min_value=0, max_value=64, step=1)
-                if st.button("Seal Hydration", type="primary"):
-                    supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"meal_info":f"Drink: {drink_item} ({drink_oz}oz)"}).execute()
-                    st.rerun()
-
-        # --- VITALS ---
-        with st.expander("🩺 Vitals", expanded=False):
+        # --- STEP 1: VITALS (Memory Only) ---
+        with st.expander("🩺 Vitals Update", expanded=False):
             v1, v2, v3, v4 = st.columns(4)
-            bp_in = v1.text_input("BP")
-            hr_in = v2.text_input("HR")
-            sp_in = v3.text_input("SpO2 %")
-            gl_in = v4.text_input("Glucose")
-            if st.button("Seal Vitals"):
-                supabase.table("care_logs").insert({
-                    "steward": st.session_state.steward_name, "shift": shift,
-                    "bp": bp_in, "hr": hr_in, "spo2": sp_in, "glucose": gl_in
-                }).execute()
-                st.success("Vitals sealed in individual columns.")
+            bp_i = v1.text_input("BP", value=st.session_state.shift_data["bp"])
+            hr_i = v2.text_input("HR", value=st.session_state.shift_data["hr"])
+            sp_i = v3.text_input("SpO2", value=st.session_state.shift_data["spo2"])
+            gl_i = v4.text_input("Gluc", value=st.session_state.shift_data["glucose"])
+            if st.button("Update Shift Vitals"):
+                st.session_state.shift_data.update({"bp": bp_i, "hr": hr_i, "spo2": sp_i, "glucose": gl_i})
+                st.toast("Vitals added to memory.")
 
-        # --- CONTINENCE ---
-        with st.expander("🕒 Continence Round", expanded=False):
-            bm_ur = st.radio("Output Observed:", ["None", "Urine", "Bowel Movement", "Both"], horizontal=True)
-            det = st.text_input("Appearance / Notes:")
-            if st.button("Seal Continence"):
-                supabase.table("care_logs").insert({
-                    "steward": st.session_state.steward_name, "shift": shift,
-                    "output_type": bm_ur, "output_details": det
-                }).execute()
-                st.success("Continence recorded.")
+        # --- STEP 2: NUTRITION & HYDRATION (Memory Only) ---
+        with st.expander("🍲 Nutrition & Hydration", expanded=False):
+            c_nut, c_hyd = st.columns(2)
+            with c_nut:
+                st.markdown("### 🍞 Food")
+                f_item = st.text_input("What was eaten?", key="food_cur")
+                f_pct = st.slider("% Consumed", 0, 100, 0, 10)
+                if st.button("Add to Nutrition History"):
+                    st.session_state.shift_data["nutrition"].append(f"{f_item} ({f_pct}%)")
+                    st.toast("Food added.")
+            with c_hyd:
+                st.markdown("### 💧 Hydration")
+                d_oz = st.number_input("Amount (oz)", min_value=0, max_value=64, step=1)
+                if st.button("Add to Hydration Total"):
+                    st.session_state.shift_data["hydration"] += d_oz
+                    st.toast(f"Total Hydration: {st.session_state.shift_data['hydration']}oz")
 
-        # --- MEDICATIONS & GENERAL TASKS ---
-        st.header("💊 Medications & General Care")
+        # --- STEP 3: MEDICATIONS & TASKS ---
+        st.header("💊 Medications & Care Check")
         with st.container(border=True):
-            current_selections = []
-            
+            current_meds = []
             if shift == "Day":
-                st.markdown("**🌅 Scheduled Day Doses**")
-                if st.checkbox("Potassium Chloride (10 MEQ)"): current_selections.append("Potassium Chloride (10 MEQ)")
-                if st.checkbox("Citalopram (20 mg)"): current_selections.append("Citalopram (20 mg)")
-                if st.checkbox("Furosemide (20 mg)"): current_selections.append("Furosemide (20 mg)")
-                if st.checkbox("Lantus (20 units)"): current_selections.append("Lantus (20 units)")
-                if st.checkbox("Aspirin/Metoprolol (Aspirin 81mg/Metoprolol 25mg)"): current_selections.append("Aspirin/Metoprolol")
-                if st.checkbox("Dorzolamide/Timolol Drops"): current_selections.append("Dorzolamide/Timolol Drops")
+                st.markdown("**🌅 Day Doses**")
+                if st.checkbox("Potassium Chloride"): current_meds.append("Potassium Chloride")
+                if st.checkbox("Citalopram"): current_selections.append("Citalopram")
+                if st.checkbox("Furosemide"): current_meds.append("Furosemide")
+                if st.checkbox("Lantus"): current_meds.append("Lantus")
+                if st.checkbox("Aspirin/Metoprolol"): current_meds.append("Aspirin/Metoprolol")
+                if st.checkbox("Dorzolamide/Timolol"): current_meds.append("Dorzolamide/Timolol")
             elif shift == "Night":
-                st.markdown("**🌙 Scheduled Night Doses**")
-                if st.checkbox("Magnesium Oxide (400 mg)"): current_selections.append("Magnesium Oxide (400 mg)")
-                if st.checkbox("Oxybutynin (5 mg)"): current_selections.append("Oxybutynin (5 mg)")
-                if st.checkbox("Donepezil (10 mg)"): current_selections.append("Donepezil (10 mg)")
-                if st.checkbox("Finasteride (5 mg) / Melatonin (5 mg)"): current_selections.append("Finasteride/Melatonin")
-                if st.checkbox("Latanoprost Drops"): current_selections.append("Latanoprost Drops")
-            elif shift == "Overnight":
-                st.info("🌙 Overnight Watch: Only PRN medications and hygiene tasks are displayed.")
-
-            st.markdown("**➕ PRN (As Needed)**")
-            p1, p2, p3 = st.columns(3)
+                st.markdown("**🌙 Night Doses**")
+                if st.checkbox("Magnesium Oxide"): current_meds.append("Magnesium Oxide")
+                if st.checkbox("Oxybutynin"): current_meds.append("Oxybutynin")
+                if st.checkbox("Donepezil"): current_meds.append("Donepezil")
+                if st.checkbox("Finasteride/Melatonin"): current_meds.append("Finasteride/Melatonin")
+                if st.checkbox("Latanoprost"): current_meds.append("Latanoprost")
+            
+            st.markdown("**➕ PRN Meds**")
+            p1, p2 = st.columns(2)
             with p1:
-                if st.checkbox("Phenazopyridine"): current_selections.append("Phenazopyridine")
-                if st.checkbox("Acetaminophen (500 mg)"): current_selections.append("Acetaminophen (500 mg)")
-                if st.checkbox("Guaifenesin"): current_selections.append("Guaifenesin")
+                if st.checkbox("Acetaminophen"): current_meds.append("Acetaminophen")
+                if st.checkbox("Phenazopyridine"): current_meds.append("Phenazopyridine")
+                if st.checkbox("Guaifenesin"): current_meds.append("Guaifenesin")
             with p2:
-                if st.checkbox("Novolog Insulin"): current_selections.append("Novolog Insulin")
-                if st.checkbox("Diclofenac Sodium Gel"): current_selections.append("Diclofenac Sodium Gel")
-            with p3:
-                if st.checkbox("Ondansetron (4 mg)"): current_selections.append("Ondansetron (4 mg)")
-                if st.checkbox("Pantoprazole (40 mg)"): current_selections.append("Pantoprazole (40 mg)")
+                if st.checkbox("Novolog"): current_meds.append("Novolog")
+                if st.checkbox("Diclofenac"): current_meds.append("Diclofenac")
+                if st.checkbox("Ondansetron"): current_meds.append("Ondansetron")
 
             st.divider()
-            st.markdown("**🧹 Hygiene & Environmental Tasks**")
+            st.markdown("**🧹 Hygiene**")
             h1, h2 = st.columns(2)
-            with h1:
-                oc = st.checkbox("Oral Care / Dentures Checked")
-                bg = st.checkbox("Bathing / Grooming / Dressing")
-            with h2:
-                lg = st.checkbox("Laundry Gathered / Surfaces Wiped")
-                rt = st.checkbox("Room Tidied / Trash Emptied")
+            h_list = []
+            if h1.checkbox("Oral Care/Dentures"): h_list.append("Oral Care")
+            if h1.checkbox("Bathing/Dressing"): h_list.append("Bathing/Dressing")
+            if h2.checkbox("Laundry/Surfaces"): h_list.append("Laundry/Surfaces")
+            if h2.checkbox("Room/Trash"): h_list.append("Room/Trash")
 
-            care_notes = st.text_area("Detailed Care Notes for the Doctors:")
-            
-            if st.button("Seal the General Ledger", type="primary"):
-                # Capturing exactly which meds were checked
-                med_string = ", ".join(current_selections) if current_selections else "No meds recorded"
-                
-                # Capturing Hygiene separately to ensure it has data
-                hygiene_list = []
-                if oc: hygiene_list.append("Oral Care/Dentures")
-                if bg: hygiene_list.append("Bathing/Dressing")
-                if lg: hygiene_list.append("Laundry/Surfaces")
-                if rt: hygiene_list.append("Room/Trash")
-                hygiene_string = ", ".join(hygiene_list) if hygiene_list else "No hygiene tasks recorded"
+            notes_i = st.text_area("Shift Observations:")
+
+            # --- THE DRAFT REVIEW WINDOW ---
+            st.divider()
+            st.subheader("📋 Vigil Draft Review")
+            st.markdown(f"""
+            <div class="draft-box">
+                <b>Shift:</b> {shift}<br>
+                <b>Vitals:</b> BP: {st.session_state.shift_data['bp']} | HR: {st.session_state.shift_data['hr']} | SpO2: {st.session_state.shift_data['spo2']} | GL: {st.session_state.shift_data['glucose']}<br>
+                <b>Nutrition:</b> {", ".join(st.session_state.shift_data['nutrition']) if st.session_state.shift_data['nutrition'] else "None recorded"}<br>
+                <b>Hydration:</b> {st.session_state.shift_data['hydration']}oz total<br>
+                <b>Meds Selected:</b> {", ".join(current_meds) if current_meds else "None"}<br>
+                <b>Hygiene:</b> {", ".join(h_list) if h_list else "None"}
+            </div>
+            """, unsafe_allow_html=True)
+            st.caption("Review the data above. Once sealed, this will become one single row in the ledger.")
+
+            # THE FINAL SEAL
+            if st.button("☦️ SEAL & END VIGIL", type="primary"):
+                final_med_string = ", ".join(current_meds) if current_meds else "None"
+                final_nut_string = " | ".join(st.session_state.shift_data["nutrition"]) if st.session_state.shift_data["nutrition"] else "None"
+                final_hyg_string = ", ".join(h_list) if h_list else "None"
                 
                 supabase.table("care_logs").insert({
                     "steward": st.session_state.steward_name,
                     "shift": shift,
-                    "medications": med_string,
-                    "notes": f"Hygiene: {hygiene_string} | Notes: {care_notes}"
+                    "bp": st.session_state.shift_data["bp"],
+                    "hr": st.session_state.shift_data["hr"],
+                    "spo2": st.session_state.shift_data["spo2"],
+                    "glucose": st.session_state.shift_data["glucose"],
+                    "meal_info": f"Food: {final_nut_string} | Total Water: {st.session_state.shift_data['hydration']}oz",
+                    "medications": final_med_string,
+                    "notes": f"Hygiene: {final_hyg_string} | Obs: {notes_i}"
                 }).execute()
-                st.success("Meds and Hygiene specifically recorded for Mandy's report.")
+                
+                # Clear memory
+                st.session_state.shift_data = {"bp": "", "hr": "", "spo2": "", "glucose": "", "nutrition": [], "hydration": 0, "meds": [], "notes": "" }
+                st.success("The Vigil has been consolidated and sealed.")
+                st.rerun()
 
-    # --- HISTORY (VIGIL HISTORY) & CSV BINDER ---
+    # --- HISTORY & REPORTING ---
     st.divider()
-    st.header("📜 Vigil History")
+    st.header("📜 Consolidated History")
+    filter_v = st.selectbox("View Range:", ["Today", "Last 48 Hours", "Full Week"])
     try:
-        recent = supabase.table("care_logs").select("*").order("created_at", desc=True).limit(50).execute()
-        if recent.data:
-            df = pd.DataFrame(recent.data)
-            
-            # 1. Standardize Timestamp
-            if 'created_at' in df.columns:
-                df['created_at'] = pd.to_datetime(df['created_at']).dt.strftime('%m/%d %H:%M')
-            
-            # 2. REMOVE UNWANTED COLUMNS FOR MANDY
-            cols_to_remove = ["toileting", "fluid_oz", "meds_given", "vitals_hr_spo2", "Blood_Pressure"]
-            df = df.drop(columns=[col for col in cols_to_remove if col in df.columns])
-            
+        days = 1 if filter_v == "Today" else (2 if "48" in filter_v else 7)
+        limit_t = (datetime.now() - timedelta(days=days)).isoformat()
+        res = supabase.table("care_logs").select("*").gt("created_at", limit_t).order("created_at", desc=True).execute()
+        if res.data:
+            df = pd.DataFrame(res.data)
+            df['Date/Time'] = pd.to_datetime(df['created_at']).dt.strftime('%m/%d %H:%M')
+            cols_to_drop = ["created_at", "toileting", "fluid_oz", "meds_given", "vitals_hr_spo2", "Blood_Pressure"]
+            df = df.drop(columns=[c for c in cols_to_drop if c in df.columns])
             st.dataframe(df, use_container_width=True)
             
-            # 3. THE CSV BINDER
             csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="🖨️ Bind Records to CSV (Print for Doctor)",
-                data=csv,
-                file_name=f"Charles_Care_Log_{datetime.now().strftime('%m_%d_%Y')}.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-    except Exception as e:
-        st.warning(f"History veiled: {e}")
+            st.download_button(f"🖨️ Export {filter_v} Report", data=csv, file_name=f"Care_Report_{filter_v}.csv", mime="text/csv")
+    except:
+        st.warning("History currently syncing...")
