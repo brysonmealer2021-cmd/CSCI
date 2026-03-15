@@ -12,29 +12,31 @@ supabase = create_client(url, key)
 # 2. CUSTOM THEME (TEAL INJECTION)
 st.markdown("""
     <style>
-    /* Main theme colors */
     :root {
         --teal-primary: #008080;
         --teal-light: #20b2aa;
+        --teal-dark: #006666;
     }
-    /* Button coloring */
+    .stApp {
+        color: #004d4d;
+    }
     div.stButton > button {
         background-color: var(--teal-primary) !important;
         color: white !important;
-        border-radius: 5px;
+        border-radius: 8px;
         border: none;
+        width: 100%;
     }
     div.stButton > button:hover {
         background-color: var(--teal-light) !important;
         color: white !important;
     }
-    /* Header coloring */
-    h1, h2, h3 {
-        color: #006666 !important;
+    h1, h2, h3, .stSubheader {
+        color: var(--teal-dark) !important;
+        font-family: 'serif';
     }
-    /* Slider/Input coloring */
-    .stSlider [data-baseweb="slider"] div {
-        background-color: var(--teal-primary) !important;
+    .stExpander {
+        border: 1px solid var(--teal-primary) !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -107,7 +109,7 @@ elif not st.session_state.blessing_received:
     with st.container(border=True):
         st.subheader("☦️ A Blessing for the Watch")
         st.write(f"*{st.session_state.daily_blessing}*")
-        if st.button("Amen", type="primary", use_container_width=True):
+        if st.button("Amen", type="primary"):
             st.session_state.blessing_received = True
             st.rerun()
 
@@ -125,4 +127,112 @@ else:
 
     st.sidebar.write(f"**Steward:** {st.session_state.steward_name}")
     st.sidebar.divider()
-    st.sidebar.subheader
+    st.sidebar.subheader(wt)
+    st.sidebar.caption(f"*{wq}*")
+    st.sidebar.divider()
+    st.sidebar.subheader("☦️ The Jesus Prayer")
+    st.sidebar.caption("*Lord Jesus Christ, Son of God, have mercy on me, a sinner.*")
+    st.sidebar.divider()
+    st.sidebar.subheader("☦️ The Trisagion")
+    st.sidebar.caption("*Holy God, Holy Mighty, Holy Immortal, have mercy on us.*")
+    
+    if st.sidebar.button("Lock the Cell"):
+        st.session_state.logged_in = False
+        st.rerun()
+
+    st.title(f"☦️ {dynamic_title}")
+
+    if st.session_state.steward_role.strip().lower() == "daughter":
+        st.success("The watch is steady and your father is in good hands. The daily labor here is focused entirely on his comfort and honor, kept with deep respect under watchful eyes. You carry no burden of the work today—the steward's tools are set aside for you. The complete ledger is laid open below so you can trace the quiet history of his days and know he is well loved.")
+    else:
+        shift = st.radio("Select vigil:", ["Day", "Night", "Overnight"], horizontal=True)
+
+        # --- NUTRITION & HYDRATION ---
+        with st.expander("🍲 Nutrition & Hydration", expanded=True):
+            forty_eight_ago = (datetime.now() - timedelta(hours=48)).isoformat()
+            logs = supabase.table("care_logs").select("meal_info").gt("created_at", forty_eight_ago).execute()
+            
+            total_oz = 0
+            food_entries = []
+            for entry in logs.data:
+                info = entry.get('meal_info', '')
+                if info and "Drink:" in info:
+                    try: total_oz += int(info.split('(')[1].split('oz')[0])
+                    except: pass
+                elif info and "Food:" in info:
+                    try: food_entries.append(int(info.split('(')[1].split('%')[0]))
+                    except: pass
+            
+            avg_food = int(sum(food_entries)/len(food_entries)) if food_entries else 0
+
+            col_nut, col_hyd = st.columns(2)
+            with col_nut:
+                st.markdown(f"### 🍞 Nutrition ({avg_food}% 48h avg)")
+                st.caption("“He satisfieth the longing soul, and filleth the hungry soul with goodness.” — Psalm 107:9")
+                food_item = st.text_input("What was eaten?", key="food_input")
+                food_p = st.slider("% Eaten", 0, 100, 0, 10)
+                if st.button("Seal Nutrition"):
+                    supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"meal_info":f"Food: {food_item} ({food_p}%)"}).execute()
+                    st.rerun()
+
+            with col_hyd:
+                st.markdown(f"### 💧 Hydration ({total_oz}oz 48h total)")
+                st.caption("“As the deer pants for the water brooks, so pants my soul for Thee, O God.”")
+                drink_item = st.text_input("What was drunk?", key="drink_input")
+                drink_oz = st.number_input("Amount (oz)", min_value=0, max_value=64, value=0, step=1)
+                if st.button("Seal Hydration", type="primary"):
+                    supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"meal_info":f"Drink: {drink_item} ({drink_oz}oz)"}).execute()
+                    st.rerun()
+
+        # --- VITALS & CONTINENCE ---
+        with st.expander("🩺 Vitals", expanded=False):
+            v1, v2, v3, v4 = st.columns(4)
+            bp, hr, sp, gl = v1.text_input("Blood Pressure"), v2.text_input("Heart Rate"), v3.text_input("SpO2"), v4.text_input("Glucose")
+            if st.button("Seal Vitals"):
+                supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"bp":bp,"hr":hr,"spo2":sp,"glucose":gl}).execute()
+
+        with st.expander("🕒 Continence Round", expanded=False):
+            bm_ur = st.radio("Output:", ["None", "Urine", "Bowel Movement", "Both"], horizontal=True)
+            det = st.text_input("Details of Output:")
+            if st.button("Seal Continence"):
+                supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"output_type":bm_ur,"output_details":det}).execute()
+
+        # --- GENERAL CARE & MEDS ---
+        st.header("💊 General Care & Medications")
+        with st.container(border=True):
+            if shift == "Day":
+                st.markdown("**Scheduled Meds**")
+                st.checkbox("Potassium Chloride (10 MEQ)"); st.checkbox("Citalopram (20 mg)"); st.checkbox("Furosemide (20 mg)")
+                st.checkbox("Lantus (20 units)"); st.checkbox("Aspirin/Metoprolol (Aspirin 81mg/Metoprolol 25mg)"); st.checkbox("Dorzolamide/Timolol Drops")
+            elif shift == "Night":
+                st.markdown("**Scheduled Meds**")
+                st.checkbox("Magnesium Oxide (400 mg)"); st.checkbox("Oxybutynin (5 mg)"); st.checkbox("Donepezil (10 mg)")
+                st.checkbox("Finasteride (5 mg) / Melatonin (5 mg)"); st.checkbox("Latanoprost Drops")
+
+            st.markdown("**➕ PRN (As Needed)**")
+            p1, p2, p3 = st.columns(3)
+            with p1: 
+                st.checkbox("Phenazopyridine"); st.checkbox("Acetaminophen (500 mg)"); st.checkbox("Guaifenesin")
+            with p2: 
+                st.checkbox("Novolog Insulin"); st.checkbox("Diclofenac Sodium Gel")
+            with p3: 
+                st.checkbox("Ondansetron (4 mg)"); st.checkbox("Pantoprazole (40 mg)")
+
+            st.divider()
+            st.markdown("**🧹 Daily Hygiene**")
+            st.checkbox("Oral Care / Dentures Checked"); st.checkbox("Bathing / Grooming / Dressing")
+            st.checkbox("Laundry Gathered / Surfaces Wiped"); st.checkbox("Room Tidied / Trash Emptied")
+
+            care_notes = st.text_area("Detailed Care Notes for the Daughters:")
+            if st.button("Seal the General Ledger"):
+                supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"medications":"Daily Routine/PRN Administered","notes":care_notes}).execute()
+                st.success("The ledger has been sealed.")
+
+    # --- HISTORY ---
+    st.divider()
+    st.header("📜 Vigil History")
+    recent = supabase.table("care_logs").select("*").order("created_at", desc=True).limit(50).execute()
+    if recent.data:
+        df = pd.DataFrame(recent.data)
+        if 'created_at' in df.columns:
+            df['created_at
