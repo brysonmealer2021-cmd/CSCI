@@ -26,53 +26,41 @@ blessings_map = {
     "gay": [
         "O Lord Almighty, the Healer of our souls and bodies, visit Thy servant in her physical trial. Grant her patience and restore her to health.",
         "O Christ, who alone art our Defender, visit and heal Thy suffering servant. Deliver her from sickness and bitter pain.",
-        "Holy Father, Physician of our souls and bodies, send down Thy healing power. Comfort her in her weakness and grant her quiet strength.",
-        "O Lord, look down with mercy upon Thy servant. Ease her bodily distress and wrap her in the grace of Thy healing.",
-        "Most Holy Theotokos, cover Thy servant with thy protecting veil. Grant her bodily endurance and deep, abiding peace."
+        "Holy Father, Physician of our souls and bodies, send down Thy healing power. Comfort her in her weakness and grant her quiet strength."
     ],
     "katelyn": [
-        "O Lord, bless the heavy and holy labor of motherhood. Grant her the physical strength to run the race and the spiritual patience.",
-        "Establish the work of her hands, O Lord. Give her endurance in her body and stillness in her heart as she tends to her family.",
-        "O Christ, who blessed the children, grant this mother the wisdom of the saints and unwavering energy.",
-        "Lord, bless her efforts to build a strong vessel. Grant her health of body and clarity of mind.",
+        "O Lord, bless the heavy and holy labor of motherhood. Grant her the physical strength to run the race.",
+        "Establish the work of her hands, O Lord. Give her endurance in her body as she tends to her family.",
         "Most Holy Theotokos, guide this mother's daily labor. Multiply her strength and surround her house with grace."
     ],
     "malinda": [
         "O Lord, who bore the heavy cross, grant strength to the one who carries the weight for her family. Give her broad shoulders.",
         "Lord, bless the one who leads and organizes the care of her father. Grant her wisdom and rest from her heavy burdens.",
-        "O Christ, support Thy servant under the weight of her responsibilities. Let her not grow weary in well-doing.",
-        "Establish her steps, O Lord, as she navigates the heavy trails for her family.",
         "O Master, look upon the one who bears the yoke of leadership in this house. Grant her rest and steady hands."
     ],
     "mandy": [
-        "Let not your heart be troubled, neither let it be afraid. O Lord, speak peace to her anxious thoughts and still the storms within.",
-        "O Christ, who calmed the raging sea, quiet the restless waters of her mind. Grant her a deep and abiding stillness.",
-        "Cast all your anxieties on Him, because He cares for you. O Lord, wrap her in Thy calm.",
-        "O Lord, grant her to meet this day in peace. In all unforeseen events, let her not forget that all are sent by Thee.",
+        "Let not your heart be troubled, neither let it be afraid. O Lord, speak peace to her anxious thoughts.",
+        "O Christ, who calmed the raging sea, quiet the restless waters of her mind.",
         "Most Holy Theotokos, calm the anxious spirit of Thy servant. Bring her the gentle quiet of the Skete."
     ],
     "bryce": [
         "O Lord and Master of my life, grant the spirit of chastity, humility, patience, and love to Thy servant.",
-        "Illumine our darkness, O Lord, and grant us a peaceful and undisturbed watch. Drive away all weariness.",
-        "Lord Jesus Christ, Son of God, have mercy on me, a sinner. Grant me a quiet spirit to tend the elder today.",
-        "Having risen from sleep, I offer Thee, O Savior, the midnight song. Grant me to walk this shift pleasing in Thy sight.",
-        "The Lord shall preserve thy going out and thy coming in. May He preserve this Cell and the heavy work of thy hands."
+        "Illumine our darkness, O Lord, and grant us a peaceful and undisturbed watch.",
+        "Lord Jesus Christ, Son of God, have mercy on me, a sinner. Grant me a quiet spirit to tend the elder today."
     ]
 }
 
 def get_blessing(username):
     name_key = username.strip().lower()
-    return random.choice(blessings_map.get(name_key, ["Peace be with you."]))
+    return random.choice(blessings_map.get(name_key, ["Peace be to this house."]))
 
 # 3. THE THRESHOLD
 if not st.session_state.logged_in:
     st.title("☦️ The Steward's Daily Office")
     entrance_quotes = [
-        "“Come to me, all who labor and are heavy laden, and I will give you rest.” — Matthew 11:28",
+        "“Come to me, all who labor and are heavy laden...”",
         "*O God, come to my assistance; O Lord, make haste to help me.*",
-        "“Let not your heart be troubled, neither let it be afraid.” — John 14:27",
-        "*Direct my steps according to Your word, and let no iniquity have dominion over me.*",
-        "“Cast all your anxieties on Him, because He cares for you.” — 1 Peter 5:7"
+        "“Let not your heart be troubled, neither let it be afraid.”"
     ]
     st.info(random.choice(entrance_quotes))
     name_input = st.text_input("Identify yourself:")
@@ -105,42 +93,32 @@ else:
     st.sidebar.divider()
     current_hour = datetime.now().hour
     if 6 <= current_hour < 12:
-        watch_title = "🌅 Morning Light"
-        time_quotes = ["“Grant me to greet the coming day in peace.”", "“Having risen from sleep, we fall down before Thee.”"]
+        watch_title, watch_quote = "🌅 Morning Light", "“Grant me to greet the coming day in peace.”"
     elif 12 <= current_hour < 18:
-        watch_title = "☀️ Midday Labor"
-        time_quotes = ["“Establish the work of our hands upon us.”", "“A humble man is never rushed.”"]
+        watch_title, watch_quote = "☀️ Midday Labor", "“Establish the work of our hands.”"
     elif 18 <= current_hour < 21:
-        watch_title = "🕯️ Evening Watch"
-        time_quotes = ["“Let my prayer arise as incense.”", "“Gladsome Light of the holy glory.”"]
+        watch_title, watch_quote = "🕯️ Evening Watch", "“Let my prayer arise as incense.”"
     else:
-        watch_title = "🌌 Night Vigil"
-        time_quotes = ["“Behold, the Bridegroom comes at midnight.”", "“I remember Thee upon my bed.”"]
+        watch_title, watch_quote = "🌌 Night Vigil", "“Behold, the Bridegroom comes at midnight.”"
     
     st.sidebar.subheader(watch_title)
-    st.sidebar.caption(f"*{random.choice(time_quotes)}*")
+    st.sidebar.caption(f"*{watch_quote}*")
     st.sidebar.divider()
-    st.sidebar.subheader("☦️ The Jesus Prayer")
     st.sidebar.caption("*Lord Jesus Christ, Son of God, have mercy on me.*")
-    st.sidebar.divider()
-    st.sidebar.subheader("☦️ The Trisagion")
-    st.sidebar.caption("*Holy God, Holy Mighty, Holy Immortal, have mercy on us.*")
-    
     if st.sidebar.button("Lock the Cell"):
         st.session_state.logged_in = False
         st.rerun()
 
     st.title("The Day's Labor")
     
-    ephrem = [
+    st.info(random.choice([
         "“O Lord and Master of my life, take from me the spirit of sloth, despair, lust of power, and idle talk.”",
         "“But give rather the spirit of chastity, humility, patience, and love to Thy servant.”",
         "“Yea, O Lord and King, grant me to see my own transgressions, and not to judge my brother.”"
-    ]
-    st.info(random.choice(ephrem))
+    ]))
 
     if st.session_state.steward_role.strip().lower() == "daughter":
-        st.success("The watch is steady and your father is in good hands. The daily labor here is focused entirely on his comfort and honor, kept with deep respect under watchful eyes. You carry no burden of the work today—the steward's tools are set aside for you. The complete ledger is laid open below so you can trace the quiet history of his days and know he is well loved.")
+        st.success("The watch is steady and your father is in good hands. The complete ledger is laid open below.")
     else:
         shift = st.radio("Select your active vigil:", ["Day", "Night", "Overnight"], horizontal=True)
 
@@ -162,19 +140,66 @@ else:
                 supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"output_type":bm_ur,"output_details":det}).execute()
                 st.success("Continence recorded.")
 
-        # --- NUTRITION & HYDRATION ---
+        # --- SPLIT NUTRITION & HYDRATION ---
         with st.expander("🍲 Nutrition & Hydration", expanded=False):
-            st.caption(random.choice(["“Whether you eat or drink, do all to the glory of God.”", "“Eat your bread in silence.”"]))
-            m_type = st.selectbox("Intake Type", ["Water/Fluid", "Small Snack", "Breakfast", "Lunch", "Dinner"])
-            amt = st.slider("% Consumed / mL", 0, 500, 0, 50)
-            if st.button("Seal Intake"):
-                supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"meal_info":f"{m_type}: {amt}"}).execute()
-                st.success("Intake recorded.")
+            col_food, col_water = st.columns(2)
+            
+            with col_food:
+                st.markdown("### 🍞 Food")
+                st.caption("“Eat your bread in silence.”")
+                food_desc = st.text_input("What was eaten?")
+                food_pct = st.slider("% Consumed", 0, 100, 0, 25)
+                if st.button("Seal Food"):
+                    supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"meal_info":f"Food: {food_desc} ({food_pct}%)"}).execute()
+                    st.success("Food recorded.")
+            
+            with col_water:
+                st.markdown("### 💧 Hydration")
+                st.caption("“The fountain of life.”")
+                drink_desc = st.text_input("What was drunk?")
+                drink_ml = st.slider("Amount (mL)", 0, 500, 0, 50)
+                if st.button("Seal Drink"):
+                    supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"meal_info":f"Drink: {drink_desc} ({drink_ml}mL)"}).execute()
+                    st.success("Hydration recorded.")
 
-        # --- GENERAL LEDGER (MEDS & HYGIENE) ---
+        # --- GENERAL LEDGER ---
         st.header("💊 General Care & Medications")
         with st.container(border=True):
             if shift == "Day":
                 st.markdown("**Morning/Noon Meds**")
                 st.checkbox("Potassium / Citalopram / Furosemide")
                 st.checkbox("Lantus (20 units) / Aspirin / Metoprolol")
+                st.checkbox("Zinc / Elderberry / Rosuvastatin / Timolol Drops")
+            elif shift == "Night":
+                st.markdown("**Evening/Bedtime Meds**")
+                st.checkbox("Magnesium / Oxybutynin / Potassium")
+                st.checkbox("Finasteride / Donepezil / Melatonin / Advil PM / Latanoprost")
+            
+            st.markdown("**➕ PRN (As Needed)**")
+            st.checkbox("Phenazopyridine / Acetaminophen / Guaifenesin / Novolog / Diclofenac / Ondansetron / Pantoprazole")
+
+            st.divider()
+            st.markdown("**🧹 Daily Hygiene**")
+            st.caption("“To instruct your neighbor is like building a church.”")
+            h1, h2 = st.columns(2)
+            with h1: 
+                st.checkbox("Oral Care / Dentures"); st.checkbox("Bathing / Grooming")
+            with h2: 
+                st.checkbox("Laundry / Surfaces"); st.checkbox("Room Tidied")
+
+            care_notes = st.text_area("Detailed Care Notes:")
+            if st.button("Seal the General Ledger", type="primary"):
+                supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"medications":"Routine/PRN Recorded","notes":care_notes}).execute()
+                st.success("Ledger sealed.")
+
+    # --- HISTORY ---
+    st.divider()
+    st.header("📜 Vigil History")
+    recent = supabase.table("care_logs").select("*").order("created_at", desc=True).limit(50).execute()
+    if recent.data:
+        df = pd.DataFrame(recent.data)
+        if 'created_at' in df.columns:
+            df['created_at'] = pd.to_datetime(df['created_at']).dt.strftime('%m/%d/%Y %H:%M')
+        st.dataframe(df, use_container_width=True)
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button("🖨️ Bind Records to CSV", data=csv, file_name=f"Care_Logs_{datetime.now().strftime('%m_%d_%Y')}.csv", mime="text/csv")
