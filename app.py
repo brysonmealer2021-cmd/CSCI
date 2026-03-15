@@ -154,14 +154,25 @@ else:
             }).execute()
             st.success("General ledger sealed.")
 
-    # --- HISTORY & CSV ---
+        # --- HISTORY & CSV ---
     st.divider()
     st.header("Vigil History")
     recent = supabase.table("care_logs").select("*").order("created_at", desc=True).limit(50).execute()
+    
     if recent.data:
         df = pd.DataFrame(recent.data)
+        
+        # This is the "sanding" tool to smooth the timestamps
+        if 'created_at' in df.columns:
+            df['created_at'] = pd.to_datetime(df['created_at']).dt.strftime('%m/%d/%Y %H:%M')
+        
         st.dataframe(df, use_container_width=True)
         
         # Binding/Printing
         csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button("Bind Records to CSV", data=csv, file_name="Care_Logs.csv", mime="text/csv")
+        st.download_button(
+            label="Bind Records to CSV", 
+            data=csv, 
+            file_name=f"Care_Logs_{datetime.now().strftime('%m_%d_%Y')}.csv", 
+            mime="text/csv"
+        )
