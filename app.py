@@ -53,7 +53,7 @@ if 'steward_role' not in st.session_state:
 if 'blessing_received' not in st.session_state:
     st.session_state.blessing_received = False
 
-# The Vigil Buffer (For Consolidation - Corrected keys)
+# The Vigil Buffer (Corrected and complete)
 if 'shift_data' not in st.session_state:
     st.session_state.shift_data = {
         "bp": "", "hr": "", "spo2": "", "glucose": "",
@@ -67,37 +67,48 @@ blessings_map = {
     "gay": [
         "O Lord Almighty, the Healer of our souls and bodies, visit Thy servant in her physical trial. Grant her patience and restore her to health.",
         "O Christ, our Defender, visit and heal Thy suffering servant. Deliver her from sickness and bitter pain.",
-        "Holy Father, Physician of our souls and bodies, send down Thy healing power."
+        "Holy Father, Physician of our souls and bodies, send down Thy healing power. Comfort her in her weakness."
     ],
     "katelyn": [
         "O Lord, bless the heavy and holy labor of motherhood. Grant her physical strength and spiritual patience.",
         "Establish the work of her hands, O Lord. Give her endurance in her body as she tends to her family.",
-        "Most Holy Theotokos, guide this mother's daily labor. Multiply her strength."
+        "Most Holy Theotokos, guide this mother's daily labor. Multiply her strength and surround her house with grace."
     ],
     "malinda": [
         "O Lord, who bore the heavy cross, grant strength to the one who carries the weight for her family. Give her broad shoulders.",
         "Lord, bless the one who leads and organizes the care of her father. Grant her wisdom, unending patience, and rest.",
-        "O Master, look upon the one who bears the yoke of leadership. Grant her steady hands."
+        "O Master, look upon the one who bears the yoke of leadership in this house. Grant her rest and steady hands."
     ],
     "mandy": [
         "Let not your heart be troubled, neither let it be afraid. O Lord, speak peace to her anxious thoughts and still the storms within.",
         "O Christ, who calmed the raging sea, quiet the restless waters of her mind. Grant her deep stillness.",
-        "Most Holy Theotokos, calm the anxious spirit of Thy servant."
+        "Most Holy Theotokos, calm the anxious spirit of Thy servant. Bring her the gentle quiet of the Skete."
     ],
     "bryce": [
         "O Lord and Master of my life, grant the spirit of chastity, humility, patience, and love to Thy servant.",
-        "Illumine our darkness, O Lord, and grant us a peaceful and undisturbed watch. Drive away all weariness.",
-        "Lord Jesus Christ, Son of God, have mercy on me, a sinner."
+        "Illumine our darkness, O Lord, and grant us a peaceful and undisturbed watch.",
+        "Lord Jesus Christ, Son of God, have mercy on me, a sinner. Grant me a quiet spirit to tend the elder today."
     ]
 }
 
 def get_blessing(username):
     name_key = username.strip().lower()
-    return random.choice(blessings_map.get(name_key, ["Peace be to this house."]))
+    return random.choice(blessings_map.get(name_key, ["Peace be to this house, and to all who dwell herein."]))
 
-# 5. THE THRESHOLD (LOGIN)
+# 5. THE THRESHOLD (LOGIN SCREEN)
 if not st.session_state.logged_in:
     st.title("☦️ The Steward's Daily Office")
+    
+    # Restored Threshold Rotation
+    threshold_blessings = [
+        "“Come to me, all who labor and are heavy laden, and I will give you rest.” — Matthew 11:28",
+        "“Let not your heart be troubled, neither let it be afraid.” — John 14:27",
+        "“Cast all your anxieties on Him, because He cares for you.” — 1 Peter 5:7",
+        "“Behold, I am with you always, even to the end of the age.” — Matthew 28:20",
+        "“The Lord is my light and my salvation; whom shall I fear?” — Psalm 27:1"
+    ]
+    st.info(random.choice(threshold_blessings))
+    
     name_input = st.text_input("Identify yourself:")
     pin_input = st.text_input("PIN:", type="password")
     if st.button("Cross the Threshold"):
@@ -111,7 +122,7 @@ if not st.session_state.logged_in:
                 st.session_state.daily_blessing = get_blessing(st.session_state.steward_name)
                 st.rerun()
             else:
-                st.error("The gate remains closed. Verify credentials.")
+                st.error("The gate remains closed. Verify your name and PIN.")
         except Exception as e:
             st.error(f"Connection failure: {e}")
 
@@ -139,12 +150,15 @@ else:
     st.sidebar.subheader(wt)
     st.sidebar.caption(f"*{wq}*")
     st.sidebar.divider()
+    
+    # Specific Sidebar Titles
     st.sidebar.subheader("☦️ The Jesus Prayer")
     st.sidebar.caption("*Lord Jesus Christ, Son of God, have mercy on me, a sinner.*")
     st.sidebar.divider()
     st.sidebar.subheader("☦️ The Trisagion")
     st.sidebar.caption("*Holy God, Holy Mighty, Holy Immortal, have mercy on us.*")
     st.sidebar.divider()
+    
     if st.sidebar.button("Lock the Cell"):
         st.session_state.logged_in = False
         st.rerun()
@@ -159,48 +173,48 @@ else:
     ]))
 
     if st.session_state.steward_role.strip().lower() == "daughter":
-        st.success("The watch is steady. Historical records are available below.")
+        st.success("The watch is steady. Consolidated shift records are available below.")
     else:
-        shift = st.radio("Active Vigil:", ["Day", "Night", "Overnight"], horizontal=True)
+        shift = st.radio("Active Vigil Shift:", ["Day", "Night", "Overnight"], horizontal=True)
 
         # --- VITALS ---
         with st.expander("🩺 Vitals Update", expanded=False):
-            st.caption(random.choice(["“A man ought to take heed to his own measure.”", "“The work of your hands is a vigil.”", "“Keep watch over your heart with all diligence.”"]))
+            st.caption(random.choice(["“A man ought to take heed to his own measure.”", "“Keep watch over your heart with all diligence.”", "“The work of your hands is a vigil.”"]))
             v1, v2, v3, v4 = st.columns(4)
             bp_i = v1.text_input("BP", value=st.session_state.shift_data["bp"])
             hr_i = v2.text_input("HR", value=st.session_state.shift_data["hr"])
             sp_i = v3.text_input("SpO2", value=st.session_state.shift_data["spo2"])
-            gl_i = v4.text_input("Gluc", value=st.session_state.shift_data["glucose"])
+            gl_i = v4.text_input("Glucose", value=st.session_state.shift_data["glucose"])
             if st.button("Update Shift Vitals"):
                 st.session_state.shift_data.update({"bp": bp_i, "hr": hr_i, "spo2": sp_i, "glucose": gl_i})
-                st.toast("Vitals added to memory.")
+                st.toast("Vitals added to draft.")
 
         # --- NUTRITION & HYDRATION ---
         with st.expander("🍲 Nutrition & Hydration", expanded=False):
-            st.caption(random.choice(["“He satisfieth the longing soul, and filleth the hungry soul with goodness.”", "“Whether you eat or drink, do all to the glory of God.”", "“The eyes of all look to Thee with hope.”"]))
+            st.caption(random.choice(["“He satisfieth the longing soul.”", "“Whether you eat or drink, do all to the glory of God.”", "“The eyes of all look to Thee with hope.”"]))
             c_nut, c_hyd = st.columns(2)
             with c_nut:
                 st.markdown("### 🍞 Food")
-                f_item = st.text_input("What was eaten?", key="f_input")
+                f_item = st.text_input("What was eaten?", key="f_input_vigil")
                 f_pct = st.slider("% Consumed", 0, 100, 0, 10)
-                if st.button("Add Food to Vigil"):
+                if st.button("Add to Nutrition History"):
                     st.session_state.shift_data["nutrition"].append(f"{f_item} ({f_pct}%)")
                     st.toast("Food added.")
             with c_hyd:
                 st.markdown("### 💧 Hydration")
                 d_oz = st.number_input("Amount (oz)", min_value=0, max_value=64, step=1)
-                if st.button("Add Water to Vigil"):
+                if st.button("Add to Hydration Total"):
                     st.session_state.shift_data["hydration"] += d_oz
-                    st.toast(f"Total: {st.session_state.shift_data['hydration']}oz")
+                    st.toast(f"Current Hydration: {st.session_state.shift_data['hydration']}oz")
 
         # --- CONTINENCE (Restored & Fixed) ---
         with st.expander("🕒 Continence Round", expanded=False):
             st.caption(random.choice(["“In serving the least of these, we serve Christ.”", "“Blessed is he that considereth the poor and needy.”", "“Be merciful, even as your Father is merciful.”"]))
             c_type = st.radio("Output Observed:", ["None", "Urine", "Bowel Movement", "Both"], horizontal=True)
-            c_details = st.text_input("Details / Appearance:", value=st.session_state.shift_data["output_details"])
-            if st.button("Update Continence in Memory"):
+            c_details = st.text_input("Appearance / Details:", value=st.session_state.shift_data["output_details"])
+            if st.button("Update Continence in Draft"):
                 st.session_state.shift_data.update({"output_type": c_type, "output_details": c_details})
-                st.toast("Continence data saved to draft.")
+                st.toast("Continence data saved to memory.")
 
         # --- MEDICATIONS & TASKS ---
         st.header("💊 Medications & Care Check")
@@ -222,6 +236,8 @@ else:
                 if st.checkbox("Donepezil"): current_meds.append("Donepezil")
                 if st.checkbox("Finasteride/Melatonin"): current_meds.append("Finasteride/Melatonin")
                 if st.checkbox("Latanoprost"): current_meds.append("Latanoprost")
+            elif shift == "Overnight":
+                st.info("🌙 Overnight Watch: Only PRN medications and hygiene tasks are displayed.")
             
             st.markdown("**➕ PRN Meds**")
             p1, p2 = st.columns(2)
@@ -245,7 +261,7 @@ else:
 
             notes_i = st.text_area("Shift Observations:")
 
-            # --- THE DRAFT REVIEW WINDOW ---
+            # --- DRAFT REVIEW WINDOW ---
             st.divider()
             st.subheader("📋 Vigil Draft Review")
             st.markdown(f"""
@@ -260,7 +276,7 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
-            # THE FINAL SEAL
+            # THE FINAL SEAL (ONE ROW PER SHIFT)
             if st.button("☦️ SEAL & END VIGIL", type="primary"):
                 final_meds = ", ".join(current_meds) if current_meds else "None"
                 final_nuts = " | ".join(st.session_state.shift_data["nutrition"]) if st.session_state.shift_data["nutrition"] else "None"
@@ -280,9 +296,9 @@ else:
                     "notes": f"Hygiene: {final_hygs} | Obs: {notes_i}"
                 }).execute()
                 
-                # Clear memory
+                # Clear memory for next watch
                 st.session_state.shift_data = {"bp":"", "hr":"", "spo2":"", "glucose":"", "nutrition":[], "hydration":0, "output_type":"None", "output_details":"", "meds":[], "hygiene":[], "notes":""}
-                st.success("The Vigil has been consolidated and sealed.")
+                st.success("The Vigil has been consolidated and sealed into the history.")
                 st.rerun()
 
     # --- HISTORY & REPORTING ---
@@ -296,10 +312,12 @@ else:
         if res.data:
             df = pd.DataFrame(res.data)
             df['Date/Time'] = pd.to_datetime(df['created_at']).dt.strftime('%m/%d %H:%M')
+            # Clean unwanted columns for the doctor
             cols_to_drop = ["created_at", "toileting", "fluid_oz", "meds_given", "vitals_hr_spo2", "Blood_Pressure"]
             df = df.drop(columns=[c for c in cols_to_drop if c in df.columns])
             st.dataframe(df, use_container_width=True)
+            
             csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button(f"🖨️ Export {filter_v} Report", data=csv, file_name=f"Care_Report_{filter_v}.csv", mime="text/csv")
+            st.download_button(f"🖨️ Export {filter_v} Report", data=csv, file_name=f"Care_Report_{filter_v}.csv", mime="text/csv", use_container_width=True)
     except:
         st.warning("History currently syncing...")
