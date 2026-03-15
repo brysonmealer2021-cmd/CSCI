@@ -37,7 +37,7 @@ st.markdown("""
         background-color: var(--teal-primary) !important;
     }
     </style>
-    """, unsafe_allow_稲rue)
+    """, unsafe_allow_true)
 
 # 3. THE MEMORY
 if 'logged_in' not in st.session_state:
