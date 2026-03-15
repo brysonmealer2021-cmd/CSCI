@@ -9,9 +9,10 @@ url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_KEY"]
 supabase = create_client(url, key)
 
-# 2. THE TEAL THEME (BUTTONS ONLY)
+# 2. THE CUSTOM THEME (Teal Buttons & Deep Blue Titles)
 st.markdown("""
     <style>
+    /* Vibrant Teal for Buttons */
     div.stButton > button {
         background-color: #008080 !important;
         color: white !important;
@@ -19,15 +20,21 @@ st.markdown("""
         border: none;
         width: 100%;
         font-weight: bold;
+        height: 3em;
     }
     div.stButton > button:hover {
         background-color: #20b2aa !important;
         color: white !important;
-        border: 1px solid #004d4d;
     }
-    /* Keeping text grounded */
-    h1, h2, h3, .stExpander {
-        color: #31333F;
+    /* Deep Ocean Blue for Headers (Readable & Colored) */
+    h1, h2, h3 {
+        color: #1a5276 !important;
+        font-weight: bold;
+    }
+    /* Expander Text Styling */
+    .stExpander {
+        border: 1px solid #008080 !important;
+        border-radius: 8px;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -149,14 +156,16 @@ else:
     ]
     st.info(random.choice(ephrem_verses))
 
-    # --- ROLE CONTENT ---
+    # --- DAUGHTER VS STEWARD CONTENT ---
     if st.session_state.steward_role.strip().lower() == "daughter":
         st.success("The watch is steady and your father is in good hands. The daily labor here is focused entirely on his comfort and honor, kept with deep respect under watchful eyes. You carry no burden of the work today—the steward's tools are set aside for you. The complete ledger is laid open below so you can trace the quiet history of his days and know he is well loved.")
     else:
-        shift = st.radio("Active Vigil:", ["Day", "Night", "Overnight"], horizontal=True)
+        shift = st.radio("Select Vigil Shift:", ["Day", "Night", "Overnight"], horizontal=True)
 
         # --- NUTRITION & HYDRATION (48H TRENDS) ---
         with st.expander("🍲 Nutrition & Hydration", expanded=True):
+            st.caption(random.choice(["“He satisfieth the longing soul...”", "“Whether you eat or drink, do all to the glory of God.”"]))
+            
             forty_eight_ago = (datetime.now() - timedelta(hours=48)).isoformat()
             try:
                 logs = supabase.table("care_logs").select("meal_info").gt("created_at", forty_eight_ago).execute()
@@ -170,43 +179,52 @@ else:
 
             col_nut, col_hyd = st.columns(2)
             with col_nut:
-                st.markdown(f"### 🍞 Nutrition ({avg_food}% 48h avg)")
-                st.caption("“He satisfieth the longing soul, and filleth the hungry soul with goodness.” — Ps 107:9")
-                food_item = st.text_input("What was eaten?", key="f_final")
-                food_slider = st.slider("% Eaten", 0, 100, 0, 10)
+                st.markdown(f"### 🍞 Nutrition ({avg_food}% avg)")
+                food_item = st.text_input("What was eaten?", key="food_final_in")
+                food_slider = st.slider("% Consumed", 0, 100, 0, 10)
                 if st.button("Seal Nutrition"):
                     supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"meal_info":f"Food: {food_item} ({food_slider}%)"}).execute()
+                    st.success("Nutrition recorded.")
                     st.rerun()
 
             with col_hyd:
-                st.markdown(f"### 💧 Hydration ({total_oz}oz 48h total)")
-                st.caption("“As the deer pants for the water brooks, so pants my soul for Thee, O God.”")
-                drink_item = st.text_input("What was drunk?", key="d_final")
-                drink_oz = st.number_input("Amount (oz)", min_value=0, max_value=64, step=1)
+                st.markdown(f"### 💧 Hydration ({total_oz}oz total)")
+                drink_item = st.text_input("What was drunk?", key="drink_final_in")
+                drink_oz = st.number_input("Amount (oz)", min_value=0, max_value=64, value=0, step=1)
                 if st.button("Seal Hydration", type="primary"):
                     supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"meal_info":f"Drink: {drink_item} ({drink_oz}oz)"}).execute()
+                    st.success("Hydration recorded.")
                     st.rerun()
 
         # --- VITALS ---
         with st.expander("🩺 Vitals", expanded=False):
-            st.caption("“A man ought to take heed to his own measure.”")
+            st.caption(random.choice(["“A man ought to take heed to his own measure.”", "“The work of your hands is a vigil.”"]))
             v1, v2, v3, v4 = st.columns(4)
-            bp, hr, sp, gl = v1.text_input("BP"), v2.text_input("HR"), v3.text_input("SpO2 %"), v4.text_input("Glucose")
+            v_bp = v1.text_input("BP")
+            v_hr = v2.text_input("Heart Rate")
+            v_sp = v3.text_input("SpO2 %")
+            v_gl = v4.text_input("Glucose")
             if st.button("Seal Vitals"):
-                supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"bp":bp,"hr":hr,"spo2":sp,"glucose":gl}).execute()
+                supabase.table("care_logs").insert({
+                    "steward": st.session_state.steward_name, "shift": shift,
+                    "bp": v_bp, "hr": v_hr, "spo2": v_sp, "glucose": v_gl
+                }).execute()
                 st.success("Vitals sealed.")
 
         # --- CONTINENCE ---
         with st.expander("🕒 Continence Round", expanded=False):
             st.caption("“Blessed is he that considereth the poor and needy.”")
-            bm_ur = st.radio("Output:", ["None", "Urine", "Bowel Movement", "Both"], horizontal=True)
+            bm_ur = st.radio("Output Observed:", ["None", "Urine", "Bowel Movement", "Both"], horizontal=True)
             det = st.text_input("Details / Appearance:")
             if st.button("Seal Continence"):
-                supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"output_type":bm_ur,"output_details":det}).execute()
+                supabase.table("care_logs").insert({
+                    "steward": st.session_state.steward_name, "shift": shift,
+                    "output_type": bm_ur, "output_details": det
+                }).execute()
                 st.success("Continence recorded.")
 
-        # --- MEDICATIONS & GENERAL TASKS ---
-        st.header("💊 Medications & General Care")
+        # --- MEDICATIONS & GENERAL CARE ---
+        st.header("💊 Medications & General Tasks")
         with st.container(border=True):
             if shift == "Day":
                 st.markdown("**🌅 Scheduled Day Doses**")
@@ -238,12 +256,16 @@ else:
                 st.checkbox("Laundry Gathered / Surfaces Wiped")
                 st.checkbox("Room Tidied / Trash Emptied")
 
+            st.divider()
             care_notes = st.text_area("Detailed Care Notes for the Daughters:")
-            if st.button("Seal General Ledger", type="primary"):
-                supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"medications":"Administered","notes":care_notes}).execute()
+            if st.button("Seal the General Ledger", type="primary"):
+                supabase.table("care_logs").insert({
+                    "steward": st.session_state.steward_name, "shift": shift,
+                    "medications": "Routine/PRN Checked", "notes": care_notes
+                }).execute()
                 st.success("The ledger has been sealed.")
 
-    # --- VIGIL HISTORY (VIGIL LOG) & CSV BINDER ---
+    # --- VIGIL LOG (HISTORY) & CSV BINDER ---
     st.divider()
     st.header("📜 Vigil History")
     try:
@@ -254,11 +276,11 @@ else:
                 df['created_at'] = pd.to_datetime(df['created_at']).dt.strftime('%m/%d %H:%M')
             st.dataframe(df, use_container_width=True)
             
-            # CSV BIND BUTTON
-            csv = df.to_csv(index=False).encode('utf-8')
+            # THE BIND RECORDS BUTTON
+            csv_data = df.to_csv(index=False).encode('utf-8')
             st.download_button(
                 label="🖨️ Bind Records to CSV",
-                data=csv,
+                data=csv_data,
                 file_name=f"Care_Logs_{datetime.now().strftime('%m_%d_%Y')}.csv",
                 mime="text/csv",
                 use_container_width=True
