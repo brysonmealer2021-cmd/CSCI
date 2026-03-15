@@ -171,4 +171,4 @@ else:
                     supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"meal_info":f"Food: {food_item} ({food_p}%)"}).execute()
                     st.rerun()
 
-            with col
+            with col:
