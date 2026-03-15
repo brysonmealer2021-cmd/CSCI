@@ -9,31 +9,19 @@ url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_KEY"]
 supabase = create_client(url, key)
 
-# 2. CUSTOM THEME (TEAL INJECTION)
+# 2. THE TEAL BUTTONS (ONLY)
 st.markdown("""
     <style>
-    :root {
-        --teal-primary: #008080;
-        --teal-light: #20b2aa;
-        --teal-dark: #006666;
-    }
-    .stApp {
-        color: #004d4d;
-    }
     div.stButton > button {
-        background-color: var(--teal-primary) !important;
+        background-color: #008080 !important;
         color: white !important;
         border-radius: 8px;
         border: none;
         width: 100%;
     }
     div.stButton > button:hover {
-        background-color: var(--teal-light) !important;
+        background-color: #20b2aa !important;
         color: white !important;
-    }
-    h1, h2, h3 {
-        color: var(--teal-dark) !important;
-        font-family: 'serif';
     }
     </style>
     """, unsafe_allow_html=True)
@@ -97,7 +85,7 @@ if not st.session_state.logged_in:
                 st.session_state.daily_blessing = get_blessing(st.session_state.steward_name)
                 st.rerun()
             else:
-                st.error("The threshold remains barred. Check your name and PIN.")
+                st.error("The threshold remains barred.")
         except Exception as e:
             st.error(f"Connection error: {e}")
 
@@ -122,10 +110,17 @@ else:
     else:
         dynamic_title, wt, wq = "🌌 The Night Vigil", "🌌 Night Vigil", "“Behold, the Bridegroom comes at midnight.”"
 
+    # --- SIDEBAR PRAYERS ---
     st.sidebar.write(f"**Steward:** {st.session_state.steward_name}")
     st.sidebar.divider()
-    st.sidebar.subheader(wt)
-    st.sidebar.caption(f"*{wq}*")
+    st.sidebar.subheader("☦️ The Jesus Prayer")
+    st.sidebar.caption("*Lord Jesus Christ, Son of God, have mercy on me, a sinner.*")
+    st.sidebar.divider()
+    st.sidebar.subheader("☦️ The Trisagion")
+    st.sidebar.caption("*Holy God, Holy Mighty, Holy Immortal, have mercy on us.*")
+    st.sidebar.divider()
+    st.sidebar.subheader("☦️ St. Ephrem")
+    st.sidebar.caption("*O Lord and Master of my life, take from me the spirit of sloth, despair, lust of power, and idle talk. But give rather the spirit of chastity, humility, patience, and love to Thy servant.*")
     
     if st.sidebar.button("Lock the Cell"):
         st.session_state.logged_in = False
@@ -134,12 +129,17 @@ else:
     st.title(f"☦️ {dynamic_title}")
 
     if st.session_state.steward_role.strip().lower() == "daughter":
-        st.success("The watch is steady and your father is in good hands. The daily labor here is focused entirely on his comfort and honor. You carry no burden of the work today. The complete ledger is laid open below.")
+        st.success("The watch is steady. You carry no burden of the work today.")
     else:
         shift = st.radio("Select vigil:", ["Day", "Night", "Overnight"], horizontal=True)
 
         # --- NUTRITION & HYDRATION ---
         with st.expander("🍲 Nutrition & Hydration", expanded=True):
+            st.caption(random.choice([
+                "“He satisfieth the longing soul, and filleth the hungry soul with goodness.” — Ps 107:9",
+                "“Whether you eat or drink, do all to the glory of God.”",
+                "“The eyes of all look to Thee with hope, and Thou givest them their food in due season.”"
+            ]))
             forty_eight_ago = (datetime.now() - timedelta(hours=48)).isoformat()
             try:
                 logs = supabase.table("care_logs").select("meal_info").gt("created_at", forty_eight_ago).execute()
@@ -148,23 +148,16 @@ else:
                 data_list = []
             
             total_oz = 0
-            food_entries = []
             for entry in data_list:
                 info = entry.get('meal_info', '')
                 if info and "Drink:" in info:
                     try: total_oz += int(info.split('(')[1].split('oz')[0])
                     except: pass
-                elif info and "Food:" in info:
-                    try: food_entries.append(int(info.split('(')[1].split('%')[0]))
-                    except: pass
             
-            avg_food = int(sum(food_entries)/len(food_entries)) if food_entries else 0
-
             col_nut, col_hyd = st.columns(2)
             with col_nut:
-                st.markdown(f"### 🍞 Nutrition ({avg_food}% avg)")
-                st.caption("“He satisfieth the longing soul.” — Ps 107:9")
-                food_item = st.text_input("What was eaten?", key="food_input")
+                st.markdown("### 🍞 Nutrition")
+                food_item = st.text_input("What was eaten?", key="f_in")
                 food_p = st.slider("% Eaten", 0, 100, 0, 10)
                 if st.button("Seal Nutrition"):
                     supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"meal_info":f"Food: {food_item} ({food_p}%)"}).execute()
@@ -172,56 +165,25 @@ else:
 
             with col_hyd:
                 st.markdown(f"### 💧 Hydration ({total_oz}oz total)")
-                st.caption("“As the deer pants for the water brooks...”")
-                drink_item = st.text_input("What was drunk?", key="drink_input")
+                drink_item = st.text_input("What was drunk?", key="d_in")
                 drink_oz = st.number_input("Amount (oz)", min_value=0, max_value=64, value=0, step=1)
-                if st.button("Seal Hydration", type="primary"):
+                if st.button("Seal Hydration"):
                     supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"meal_info":f"Drink: {drink_item} ({drink_oz}oz)"}).execute()
                     st.rerun()
 
         # --- VITALS & CONTINENCE ---
         with st.expander("🩺 Vitals", expanded=False):
+            st.caption("“A man ought to take heed to his own measure.”")
             v1, v2, v3, v4 = st.columns(4)
             bp, hr, sp, gl = v1.text_input("BP"), v2.text_input("HR"), v3.text_input("SpO2"), v4.text_input("Gluc")
             if st.button("Seal Vitals"):
                 supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"bp":bp,"hr":hr,"spo2":sp,"glucose":gl}).execute()
-                st.success("Vitals sealed.")
 
-        with st.expander("🕒 Continence", expanded=False):
+        with st.expander("🕒 Continence Round", expanded=False):
+            st.caption("“In serving the least of these, we serve Christ.”")
             bm_ur = st.radio("Output:", ["None", "Urine", "BM", "Both"], horizontal=True)
             det = st.text_input("Details:")
             if st.button("Seal Continence"):
                 supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"output_type":bm_ur,"output_details":det}).execute()
-                st.success("Recorded.")
 
-        # --- GENERAL CARE & MEDS ---
-        st.header("💊 Medications & Care")
-        with st.container(border=True):
-            if shift == "Day":
-                st.checkbox("Potassium Chloride"); st.checkbox("Citalopram"); st.checkbox("Furosemide")
-                st.checkbox("Lantus"); st.checkbox("Aspirin/Metoprolol"); st.checkbox("Dorzolamide/Timolol")
-            else:
-                st.checkbox("Magnesium Oxide"); st.checkbox("Oxybutynin"); st.checkbox("Donepezil")
-                st.checkbox("Finasteride / Melatonin"); st.checkbox("Latanoprost")
-
-            st.markdown("**PRN / Hygiene**")
-            st.checkbox("Acetaminophen"); st.checkbox("Novolog"); st.checkbox("Ondansetron")
-            st.checkbox("Oral Care"); st.checkbox("Bathing"); st.checkbox("Room Tidy")
-
-            care_notes = st.text_area("Notes for the Daughters:")
-            if st.button("Seal General Ledger"):
-                supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"medications":"Administered","notes":care_notes}).execute()
-                st.success("Sealed.")
-
-    # --- HISTORY ---
-    st.divider()
-    st.header("📜 Vigil History")
-    try:
-        recent = supabase.table("care_logs").select("*").order("created_at", desc=True).limit(20).execute()
-        if recent.data:
-            df = pd.DataFrame(recent.data)
-            if 'created_at' in df.columns:
-                df['created_at'] = pd.to_datetime(df['created_at']).dt.strftime('%m/%d %H:%M')
-            st.dataframe(df, use_container_width=True)
-    except:
-        st.warning("History is momentarily veiled.")
+        #
