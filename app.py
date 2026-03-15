@@ -171,7 +171,7 @@ else:
     ]))
 
     if st.session_state.steward_role.strip().lower() == "daughter":
-        st.success("The watch is steady. Consolidated shift records are available below.")
+        st.success("The watch is steady and your father is in good hands. The daily labor here is focused entirely on his comfort and honor, kept with deep respect under watchful eyes. You carry no burden of the work today—the steward's tools are set aside for you. The complete ledger is laid open below so you can trace the quiet history of his days and know he is well loved.")
     else:
         shift = st.radio("Active Vigil Shift:", ["Day", "Night", "Overnight"], horizontal=True)
 
