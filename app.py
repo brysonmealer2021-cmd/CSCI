@@ -142,7 +142,7 @@ elif not st.session_state.blessing_received:
 
 # 7. THE MAIN LABOR
 else:
-current_hour = datetime.now(zoneinfo.ZoneInfo("America/New_York")).hour
+    current_hour = datetime.now(zoneinfo.ZoneInfo("America/New_York")).hour
     if 6 <= current_hour < 12: d_title, wt, wq = "🌅 Morning Offering", "🌅 Morning Light", "“Greet the day in peace.”"
     elif 12 <= current_hour < 18: d_title, wt, wq = "☀️ Midday Labor", "☀️ Midday Labor", "“Establish the work of our hands.”"
     elif 18 <= current_hour < 21: d_title, wt, wq = "🕯️ Evening Sacrifice", "🕯️ Evening Watch", "“Let my prayer arise as incense.”"
