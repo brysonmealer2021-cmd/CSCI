@@ -112,7 +112,6 @@ elif not st.session_state.blessing_received:
 
 # 6. THE SACRED VIGIL
 else:
-    # Dynamic Title
     current_hour = datetime.now().hour
     if 6 <= current_hour < 12:
         dynamic_title, wt, wq = "🌅 The Morning Offering", "🌅 Morning Light", "“O Lord, grant me to greet the coming day in peace.”"
@@ -171,4 +170,58 @@ else:
                     supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"meal_info":f"Food: {food_item} ({food_p}%)"}).execute()
                     st.rerun()
 
-            with col:
+            with col_hyd:
+                st.markdown(f"### 💧 Hydration ({total_oz}oz total)")
+                st.caption("“As the deer pants for the water brooks...”")
+                drink_item = st.text_input("What was drunk?", key="drink_input")
+                drink_oz = st.number_input("Amount (oz)", min_value=0, max_value=64, value=0, step=1)
+                if st.button("Seal Hydration", type="primary"):
+                    supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"meal_info":f"Drink: {drink_item} ({drink_oz}oz)"}).execute()
+                    st.rerun()
+
+        # --- VITALS & CONTINENCE ---
+        with st.expander("🩺 Vitals", expanded=False):
+            v1, v2, v3, v4 = st.columns(4)
+            bp, hr, sp, gl = v1.text_input("BP"), v2.text_input("HR"), v3.text_input("SpO2"), v4.text_input("Gluc")
+            if st.button("Seal Vitals"):
+                supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"bp":bp,"hr":hr,"spo2":sp,"glucose":gl}).execute()
+                st.success("Vitals sealed.")
+
+        with st.expander("🕒 Continence", expanded=False):
+            bm_ur = st.radio("Output:", ["None", "Urine", "BM", "Both"], horizontal=True)
+            det = st.text_input("Details:")
+            if st.button("Seal Continence"):
+                supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"output_type":bm_ur,"output_details":det}).execute()
+                st.success("Recorded.")
+
+        # --- GENERAL CARE & MEDS ---
+        st.header("💊 Medications & Care")
+        with st.container(border=True):
+            if shift == "Day":
+                st.checkbox("Potassium Chloride"); st.checkbox("Citalopram"); st.checkbox("Furosemide")
+                st.checkbox("Lantus"); st.checkbox("Aspirin/Metoprolol"); st.checkbox("Dorzolamide/Timolol")
+            else:
+                st.checkbox("Magnesium Oxide"); st.checkbox("Oxybutynin"); st.checkbox("Donepezil")
+                st.checkbox("Finasteride / Melatonin"); st.checkbox("Latanoprost")
+
+            st.markdown("**PRN / Hygiene**")
+            st.checkbox("Acetaminophen"); st.checkbox("Novolog"); st.checkbox("Ondansetron")
+            st.checkbox("Oral Care"); st.checkbox("Bathing"); st.checkbox("Room Tidy")
+
+            care_notes = st.text_area("Notes for the Daughters:")
+            if st.button("Seal General Ledger"):
+                supabase.table("care_logs").insert({"steward":st.session_state.steward_name,"shift":shift,"medications":"Administered","notes":care_notes}).execute()
+                st.success("Sealed.")
+
+    # --- HISTORY ---
+    st.divider()
+    st.header("📜 Vigil History")
+    try:
+        recent = supabase.table("care_logs").select("*").order("created_at", desc=True).limit(20).execute()
+        if recent.data:
+            df = pd.DataFrame(recent.data)
+            if 'created_at' in df.columns:
+                df['created_at'] = pd.to_datetime(df['created_at']).dt.strftime('%m/%d %H:%M')
+            st.dataframe(df, use_container_width=True)
+    except:
+        st.warning("History is momentarily veiled.")
