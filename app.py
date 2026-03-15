@@ -53,11 +53,12 @@ if 'steward_role' not in st.session_state:
 if 'blessing_received' not in st.session_state:
     st.session_state.blessing_received = False
 
-# The Vigil Buffer (For Consolidation)
+# The Vigil Buffer (For Consolidation - Corrected keys)
 if 'shift_data' not in st.session_state:
     st.session_state.shift_data = {
         "bp": "", "hr": "", "spo2": "", "glucose": "",
-        "nutrition": [], "hydration": 0, "output_type": "None", "output_details": "",
+        "nutrition": [], "hydration": 0, 
+        "output_type": "None", "output_details": "",
         "meds": [], "hygiene": [], "notes": ""
     }
 
@@ -74,18 +75,18 @@ blessings_map = {
         "Most Holy Theotokos, guide this mother's daily labor. Multiply her strength."
     ],
     "malinda": [
-        "O Lord, who bore the heavy cross, grant strength to the one who carries the weight for her family.",
-        "Lord, bless the one who leads and organizes the care of her father. Grant her wisdom and rest.",
+        "O Lord, who bore the heavy cross, grant strength to the one who carries the weight for her family. Give her broad shoulders.",
+        "Lord, bless the one who leads and organizes the care of her father. Grant her wisdom, unending patience, and rest.",
         "O Master, look upon the one who bears the yoke of leadership. Grant her steady hands."
     ],
     "mandy": [
-        "Let not your heart be troubled, neither let it be afraid. O Lord, speak peace to her anxious thoughts.",
-        "O Christ, who calmed the raging sea, quiet the restless waters of her mind.",
+        "Let not your heart be troubled, neither let it be afraid. O Lord, speak peace to her anxious thoughts and still the storms within.",
+        "O Christ, who calmed the raging sea, quiet the restless waters of her mind. Grant her deep stillness.",
         "Most Holy Theotokos, calm the anxious spirit of Thy servant."
     ],
     "bryce": [
         "O Lord and Master of my life, grant the spirit of chastity, humility, patience, and love to Thy servant.",
-        "Illumine our darkness, O Lord, and grant us a peaceful and undisturbed watch.",
+        "Illumine our darkness, O Lord, and grant us a peaceful and undisturbed watch. Drive away all weariness.",
         "Lord Jesus Christ, Son of God, have mercy on me, a sinner."
     ]
 }
@@ -126,7 +127,7 @@ elif not st.session_state.blessing_received:
 
 # 7. THE MAIN LABOR
 else:
-    # Sidebar Restoration
+    # Sidebar Restoration with Specific Titles
     current_hour = datetime.now().hour
     if 6 <= current_hour < 12: d_title, wt, wq = "🌅 Morning Offering", "🌅 Morning Light", "“Greet the day in peace.”"
     elif 12 <= current_hour < 18: d_title, wt, wq = "☀️ Midday Labor", "☀️ Midday Labor", "“Establish the work of our hands.”"
@@ -138,8 +139,10 @@ else:
     st.sidebar.subheader(wt)
     st.sidebar.caption(f"*{wq}*")
     st.sidebar.divider()
-    st.sidebar.subheader("☦️ Sidebar Prayers")
+    st.sidebar.subheader("☦️ The Jesus Prayer")
     st.sidebar.caption("*Lord Jesus Christ, Son of God, have mercy on me, a sinner.*")
+    st.sidebar.divider()
+    st.sidebar.subheader("☦️ The Trisagion")
     st.sidebar.caption("*Holy God, Holy Mighty, Holy Immortal, have mercy on us.*")
     st.sidebar.divider()
     if st.sidebar.button("Lock the Cell"):
@@ -160,7 +163,7 @@ else:
     else:
         shift = st.radio("Active Vigil:", ["Day", "Night", "Overnight"], horizontal=True)
 
-        # --- VITALS (Memory Only) ---
+        # --- VITALS ---
         with st.expander("🩺 Vitals Update", expanded=False):
             st.caption(random.choice(["“A man ought to take heed to his own measure.”", "“The work of your hands is a vigil.”", "“Keep watch over your heart with all diligence.”"]))
             v1, v2, v3, v4 = st.columns(4)
@@ -172,7 +175,7 @@ else:
                 st.session_state.shift_data.update({"bp": bp_i, "hr": hr_i, "spo2": sp_i, "glucose": gl_i})
                 st.toast("Vitals added to memory.")
 
-        # --- NUTRITION & HYDRATION (Memory Only) ---
+        # --- NUTRITION & HYDRATION ---
         with st.expander("🍲 Nutrition & Hydration", expanded=False):
             st.caption(random.choice(["“He satisfieth the longing soul, and filleth the hungry soul with goodness.”", "“Whether you eat or drink, do all to the glory of God.”", "“The eyes of all look to Thee with hope.”"]))
             c_nut, c_hyd = st.columns(2)
@@ -190,14 +193,14 @@ else:
                     st.session_state.shift_data["hydration"] += d_oz
                     st.toast(f"Total: {st.session_state.shift_data['hydration']}oz")
 
-        # --- CONTINENCE (Memory Only) ---
+        # --- CONTINENCE (Restored & Fixed) ---
         with st.expander("🕒 Continence Round", expanded=False):
             st.caption(random.choice(["“In serving the least of these, we serve Christ.”", "“Blessed is he that considereth the poor and needy.”", "“Be merciful, even as your Father is merciful.”"]))
             c_type = st.radio("Output Observed:", ["None", "Urine", "Bowel Movement", "Both"], horizontal=True)
             c_details = st.text_input("Details / Appearance:", value=st.session_state.shift_data["output_details"])
             if st.button("Update Continence in Memory"):
                 st.session_state.shift_data.update({"output_type": c_type, "output_details": c_details})
-                st.toast("Continence data saved.")
+                st.toast("Continence data saved to draft.")
 
         # --- MEDICATIONS & TASKS ---
         st.header("💊 Medications & Care Check")
